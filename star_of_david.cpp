@@ -98,9 +98,12 @@ int main()
 
 
     float vertices[] = {
-            0.5f, -0.5f, 0.0f, // bottom right
-            -0.5f, -0.5f, 0.0f, // bottom left
-            0.0f, 0.5f, 0.0f,
+            0.5f, -0.4f, 0.0f, // bottom right
+            -0.5f, -0.4f, 0.0f, // bottom left
+            0.0f, 0.75f, 0.0f,
+            -0.5f, 0.4f, 0.0f, // bottom right
+            0.5f, 0.4f, 0.0f, // bottom left
+            0.0f, -0.75f, 0.0f,
     };
 
     unsigned int VBO, VAO; // vertex buffer object - sends many vertices to gpu when told to
@@ -139,7 +142,7 @@ int main()
         // 4. draw the object
         glUseProgram(shaderProgram); // use the program
         glBindVertexArray(VAO); // bind the VAO
-        glDrawArrays(GL_TRIANGLES, 0, 3); // draw a triangle with 3 vertices
+        glDrawArrays(GL_TRIANGLES, 0, 6); // draw a triangle with 3 vertices
         glBindVertexArray(0); // unbind the VAO
 
         glfwSwapBuffers(window); // double buffer cool concept - page 23

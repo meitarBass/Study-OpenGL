@@ -14,12 +14,20 @@ const char *vertexShaderSource =
         " gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
         "}\0";
 
-const char *fragmentShaderSource =
+const char *firstFragmentShaderSource =
         "#version 330 core\n"
         "out vec4 FragColor;\n"
         "void main()\n"
         "{\n"
         "FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+        "}\0";
+
+const char *secondFragmentShaderSource =
+        "#version 330 core\n"
+        "out vec4 FragColor;\n"
+        "void main()\n"
+        "{\n"
+        "FragColor = vec4(1.0f, 1.0f, 0.0f, 1.0f);\n"
         "}\0";
 
 int main()
@@ -53,7 +61,6 @@ int main()
     // view port should be adjusted when the user adjust window size
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-
     // Vertex shader
     unsigned int vertexShader;
     vertexShader = glCreateShader(GL_VERTEX_SHADER); // which shader type we are using
@@ -72,61 +79,79 @@ int main()
         std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
     }
 
-    unsigned int fragmentShader;
-    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER); // which shader type we are using
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL); // compile the shader
-    glCompileShader(fragmentShader); // compile the shader
+    unsigned int firstFragmentShader;
+    firstFragmentShader = glCreateShader(GL_FRAGMENT_SHADER); // which shader type we are using
+    glShaderSource(firstFragmentShader, 1, &firstFragmentShaderSource, NULL); // compile the shader
+    glCompileShader(firstFragmentShader); // compile the shader
+
+    unsigned int secondFragmentShader;
+    secondFragmentShader = glCreateShader(GL_FRAGMENT_SHADER); // which shader type we are using
+    glShaderSource(secondFragmentShader, 1, &secondFragmentShaderSource, NULL); // compile the shader
+    glCompileShader(secondFragmentShader); // compile the shader
 
     // link the shaders into a program
-    unsigned int shaderProgram;
-    shaderProgram = glCreateProgram(); // create a new program
+    unsigned int firstShaderProgram, secondShaderProgram;
+    firstShaderProgram = glCreateProgram(); // create a new program
+    secondShaderProgram = glCreateProgram(); // create a new program
 
-    glAttachShader(shaderProgram, vertexShader); // attach vertex shader to program
-    glAttachShader(shaderProgram, fragmentShader); // attach fragment shader to program
-    glLinkProgram(shaderProgram); // link the program
+    glAttachShader(firstShaderProgram, vertexShader); // attach vertex shader to program
+    glAttachShader(firstShaderProgram, firstFragmentShader); // attach fragment shader to program
+    glLinkProgram(firstShaderProgram); // link the program
 
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    glAttachShader(secondShaderProgram, vertexShader); // attach vertex shader to program
+    glAttachShader(secondShaderProgram, secondFragmentShader); // attach fragment shader to program
+    glLinkProgram(secondShaderProgram); // link the program
+
+    glGetProgramiv(firstShaderProgram, GL_LINK_STATUS, &success);
+    glGetProgramiv(secondFragmentShader, GL_LINK_STATUS, &success);
     if(!success) {
-        glGetProgramInfoLog(shaderProgram, sizeof(infoLog), NULL, infoLog);
+        glGetProgramInfoLog(firstShaderProgram, sizeof(infoLog), NULL, infoLog);
+        glGetProgramInfoLog(secondFragmentShader, sizeof(infoLog), NULL, infoLog);
         std::cout << "ERROR::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
     }
 
-    glUseProgram(shaderProgram); // use the program
+    glUseProgram(firstShaderProgram); // use the program
+    glUseProgram(secondShaderProgram); // use the program
 
     glDeleteShader(vertexShader); // delete the shaders as they're no longer needed
-    glDeleteShader(fragmentShader); //
+    glDeleteShader(firstFragmentShader); //
+    glDeleteShader(secondFragmentShader); //
 
 
-    float vertices[] = {
-            0.5f, -0.5f, 0.0f, // bottom right
-            -0.5f, -0.5f, 0.0f, // bottom left
-            0.0f, 0.5f, 0.0f,
+    float firstTriangle[] = {
+            0.5f, -0.4f, 0.0f,
+            -0.5f, -0.4f, 0.0f,
+            0.0f, 0.75f, 0.0f,
     };
 
-    unsigned int VBO, VAO; // vertex buffer object - sends many vertices to gpu when told to
-    glGenVertexArrays(1, &VAO); // creates new object
-    glGenBuffers(1, &VBO); // creates new object
+    float secondTriangle[] = {
+            -0.5f, 0.4f, 0.0f,
+            0.5f, 0.4f, 0.0f,
+            0.0f, -0.75f, 0.0f,
+    };
 
-    // 1. bind vertex Array Object (VAO)
-    glBindVertexArray(VAO); // bind the VAO
+    unsigned int VBOs[2], VAOs[2];
+    glGenVertexArrays(2, VAOs);
+    glGenBuffers(2, VBOs);
 
-    // 2. copy our vertices array to the buffer for OpenGL to use
-    glBindBuffer(GL_ARRAY_BUFFER, VBO); // bind the buffer
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); // send vertices to GPU
 
-    // 3. set our vertex attributes pointers
+    // First triangle
+    glBindVertexArray(VAOs[0]);
+    glBindBuffer(GL_ARRAY_BUFFER, VBOs[0]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(firstTriangle), firstTriangle, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0); // position attribute
     glEnableVertexAttribArray(0); // enable the position attribute
 
-    // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    // Second triangle
+    glBindVertexArray(VAOs[1]);
+    glBindBuffer(GL_ARRAY_BUFFER, VBOs[1]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(secondTriangle), secondTriangle, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0); // position attribute
+    glEnableVertexAttribArray(0); // enable the position attribute
 
-    // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
-    // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
-    glBindVertexArray(0);
 
     // uncomment this call to draw in wireframe polygons.
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     // render loop - making sure window won't close until user closes it
     while(!glfwWindowShouldClose(window)) // do we need to close?
@@ -137,18 +162,23 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
 
         // 4. draw the object
-        glUseProgram(shaderProgram); // use the program
-        glBindVertexArray(VAO); // bind the VAO
+        glUseProgram(firstShaderProgram); // use the program
+
+        glBindVertexArray(VAOs[0]); // bind the VAO
         glDrawArrays(GL_TRIANGLES, 0, 3); // draw a triangle with 3 vertices
-        glBindVertexArray(0); // unbind the VAO
+
+        glUseProgram(secondShaderProgram); // use the program
+        glBindVertexArray(VAOs[1]); // bind the VAO
+        glDrawArrays(GL_TRIANGLES, 0, 3); // draw a triangle with 3 vertices
 
         glfwSwapBuffers(window); // double buffer cool concept - page 23
         glfwPollEvents(); // any events were triggered? update accordingly
     }
 
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteProgram(shaderProgram);
+    glDeleteVertexArrays(2, VAOs);
+    glDeleteBuffers(2, VBOs);
+    glDeleteProgram(firstShaderProgram);
+    glDeleteProgram(secondShaderProgram);
 
     glfwTerminate();
     return 0;

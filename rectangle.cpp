@@ -98,14 +98,21 @@ int main()
 
 
     float vertices[] = {
+            0.5f, 0.5f, 0.0f, // top right
             0.5f, -0.5f, 0.0f, // bottom right
             -0.5f, -0.5f, 0.0f, // bottom left
-            0.0f, 0.5f, 0.0f,
+            -0.5f, 0.5f, 0.0f // top left
     };
 
-    unsigned int VBO, VAO; // vertex buffer object - sends many vertices to gpu when told to
+    unsigned int indices[] = { // note that we start from 0!
+            0, 1, 3, // first triangle
+            1, 2, 3
+    };
+
+    unsigned int VBO, VAO, EBO; // vertex buffer object - sends many vertices to gpu when told to
     glGenVertexArrays(1, &VAO); // creates new object
     glGenBuffers(1, &VBO); // creates new object
+    glGenBuffers(1, &EBO); // creates new object
 
     // 1. bind vertex Array Object (VAO)
     glBindVertexArray(VAO); // bind the VAO
@@ -114,6 +121,9 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, VBO); // bind the buffer
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); // send vertices to GPU
 
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO); // bind the buffer
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW); // send vertices to GPU
+
     // 3. set our vertex attributes pointers
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0); // position attribute
     glEnableVertexAttribArray(0); // enable the position attribute
@@ -121,9 +131,12 @@ int main()
     // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+    // remember: do NOT unbind the EBO while a VAO is active as the bound element buffer object IS stored in the VAO; keep the EBO bound.
+    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
     // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
     // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
-    glBindVertexArray(0);
+    glBindVertexArray(0); // unbind the VAO
 
     // uncomment this call to draw in wireframe polygons.
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -139,7 +152,8 @@ int main()
         // 4. draw the object
         glUseProgram(shaderProgram); // use the program
         glBindVertexArray(VAO); // bind the VAO
-        glDrawArrays(GL_TRIANGLES, 0, 3); // draw a triangle with 3 vertices
+//        glDrawArrays(GL_TRIANGLES, 0, 3); // draw a triangle with 3 vertices
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // draw a rectangle using 6 vertices (2 traingles)
         glBindVertexArray(0); // unbind the VAO
 
         glfwSwapBuffers(window); // double buffer cool concept - page 23
@@ -148,6 +162,7 @@ int main()
 
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
     glDeleteProgram(shaderProgram);
 
     glfwTerminate();
