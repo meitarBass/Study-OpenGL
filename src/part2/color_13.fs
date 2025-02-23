@@ -22,7 +22,7 @@ void main()
 
     float diff = max(dot(norm, lightDirection), 0.0);
     vec3 diffuse = diff * lightColor;
-
+//
     // specular
     float specularStrength = 0.7;
 
