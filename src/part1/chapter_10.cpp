@@ -13,7 +13,7 @@
 #include <../includes/glm/glm/gtc/matrix_transform.hpp>
 #include <../includes/glm/glm/gtc/type_ptr.hpp>
 #include <../includes/MyError.h>
-#include <../includes/camera.h>
+#include "../../includes/camera.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
